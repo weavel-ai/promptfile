@@ -1,46 +1,41 @@
 import copy
 import os
 import re
-from typing import Any, Dict, List, Literal, Optional, Self, Union
+from typing import Any, Dict, List, Literal, Optional, Self, Union, TypedDict
 import yaml
 from threading import Lock
-
-from .types import Message
+from pydantic import Field, BaseModel
 
 # Global instance for the singleton
 _prompt_file_instance: Union["PromptFile", None] = None
 
 
-class PromptConfig:
-    def __init__(
-        self,
-        messages: List[Dict[Literal["role", "content"], str]],
-        model: Optional[str] = None,
-        **kwargs,
-    ):
-        self.model: Optional[str] = model
-        self.messages: List[Dict[Literal["role", "content"], str]] = [
-            Message.model_validate(msg).model_dump() for msg in messages
-        ]
-        self.metadata: Dict[str, Any] = kwargs
+class Message(TypedDict):
+    role: Literal["system", "user", "assistant"]
+    content: str
+
+
+class PromptConfig(BaseModel):
+    model: Optional[str] = None
+    messages: List[Message] = Field(default_factory=list)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
     def __repr__(self):
         return f"PromptConfig(model={self.model}, messages={self.messages}, metadata={self.metadata})"
 
     @classmethod
     def load(cls, content: str) -> Self:
-        instance = cls.__new__(cls)
         # Split the content into YAML and prompt parts
         yaml_section, prompt_section = content.split("---", 2)[1:]
 
         # Load the YAML front matter
         config = yaml.safe_load(yaml_section.strip())
-        instance.model = config.pop("model", None)
+        messages = _extract_messages(prompt_section)
 
-        # Extract the messages
-        instance.messages = _extract_messages(prompt_section)
-        instance.metadata = config
-
+        # Create the instance using Pydantic's model_construct
+        instance = cls.model_construct(
+            model=config.pop("model", None), messages=messages, metadata=config
+        )
         return instance
 
     @classmethod
@@ -50,14 +45,13 @@ class PromptConfig:
 
     @classmethod
     def from_filename(cls, name: str) -> Self:
-        # instance = cls.__new__(cls)
         pf = PromptFile()
         if name in pf.prompt_names:
             prompt = pf.get(name)
-            instance = cls.__new__(cls)
-            instance.model = prompt.model
-            instance.messages = prompt.messages
-            instance.metadata = prompt.metadata
+            # Use model_construct to create and initialize the instance
+            instance = cls.model_construct(
+                model=prompt.model, messages=prompt.messages, metadata=prompt.metadata
+            )
             return instance
         else:
             raise ValueError(
