@@ -10,7 +10,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="promptfile",
-    version="0.2.0",
+    version="0.2.1",
     packages=find_namespace_packages(),
     entry_points={},
     description="promptfile: language support for .prompt files",

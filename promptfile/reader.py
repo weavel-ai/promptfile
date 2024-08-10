@@ -1,7 +1,8 @@
 import copy
 import os
 import re
-from typing import Any, Dict, List, Literal, Optional, Self, Union, TypedDict
+from typing import Any, Dict, List, Literal, Optional, Self, Union
+from typing_extensions import TypedDict
 import yaml
 from threading import Lock
 from pydantic import Field, BaseModel
