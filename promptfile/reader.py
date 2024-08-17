@@ -27,7 +27,7 @@ class PromptConfig(BaseModel):
     @classmethod
     def load(cls, content: str) -> Self:
         # Split the content into YAML and prompt parts
-        match = re.match(r"^---\n(.*?\n)---\n(.*)$", content, re.DOTALL)
+        match = re.match(r"^\s*---\n(.*?\n)---\n(.*)$", content, re.DOTALL)
         if not match:
             raise ValueError("Invalid content format")
         yaml_section, prompt_section = match.groups()
