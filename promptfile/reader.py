@@ -118,7 +118,7 @@ class PromptConfig(BaseModel):
 
         return full_content
 
-    def deepcopy(self) -> Self:
+    def deepcopy(self) -> "PromptConfig":
         return copy.deepcopy(self)
 
 
