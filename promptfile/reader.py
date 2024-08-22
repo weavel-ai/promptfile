@@ -1,7 +1,7 @@
 import copy
 import os
 import re
-from typing import Any, Dict, List, Literal, Optional, Self, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 from typing_extensions import TypedDict
 import yaml
 from threading import Lock
@@ -25,7 +25,7 @@ class PromptConfig(BaseModel):
         return f"PromptConfig(model={self.model}, messages={self.messages}, metadata={self.metadata})"
 
     @classmethod
-    def load(cls, content: str) -> Self:
+    def load(cls, content: str) -> "PromptConfig":
         # Split the content into YAML and prompt parts
         match = re.match(r"^\s*---\n(.*?\n)---\n(.*)$", content, re.DOTALL)
         if not match:
@@ -43,12 +43,12 @@ class PromptConfig(BaseModel):
         return instance
 
     @classmethod
-    def load_file(cls, file_path: str) -> Self:
+    def load_file(cls, file_path: str) -> "PromptConfig":
         content = _read_file(file_path)
         return cls.load(content)
 
     @classmethod
-    def from_filename(cls, name: str) -> Self:
+    def from_filename(cls, name: str) -> "PromptConfig":
         pf = PromptFile()
         if name in pf.prompt_names:
             prompt = pf.get(name)
@@ -62,7 +62,7 @@ class PromptConfig(BaseModel):
                 f"Invalid prompt name: {name}. Must be one of {pf.prompt_names}"
             )
 
-    def format(self, **kwargs) -> Self:
+    def format(self, **kwargs) -> "PromptConfig":
         new = self.deepcopy()
         for i, msg in enumerate(new.messages):
             content = msg["content"]
@@ -233,19 +233,3 @@ def _extract_messages(
         messages.append({"role": role, "content": message})
 
     return messages
-
-
-# Usage
-# import promptfile as pf
-
-# example_prompt = pf.load("example")
-
-# print(example_prompt.model)
-# print(example_prompt.messages)
-
-
-# Example usage
-if __name__ == "__main__":
-    PromptFile.load()
-    TEST_PROMPT = PromptFile.get(name="example")
-    TEST_PROMPT.messages
