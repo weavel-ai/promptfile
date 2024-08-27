@@ -105,7 +105,7 @@ class PromptConfig(BaseModel):
         yaml_content = {"model": self.model, **self.metadata}
 
         # Dump the YAML content
-        yaml_header = yaml.dump(yaml_content, default_flow_style=False)
+        yaml_header = yaml.dump(yaml_content, default_flow_style=False, sort_keys=False)
 
         # Prepare the messages content
         messages_content = "\n".join(
