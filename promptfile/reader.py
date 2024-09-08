@@ -29,7 +29,7 @@ class PromptConfig(BaseModel):
         # Split the content into YAML and prompt parts
         match = re.match(r"^\s*---\n(.*?\n)---\n(.*)$", content, re.DOTALL)
         if not match:
-            raise ValueError("Invalid content format")
+            raise ValueError(f"Invalid content format, {content}")
         yaml_section, prompt_section = match.groups()
 
         # Load the YAML front matter
