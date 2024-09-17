@@ -67,28 +67,31 @@ class PromptConfig(BaseModel):
         for i, msg in enumerate(new.messages):
             content = msg["content"]
             try:
-                # Use a single format call with all kwargs
                 msg["content"] = content.format(**kwargs)
             except KeyError as e:
-                # If KeyError occurs, fall back to manual replacement
                 missing_keys = []
-                for key, value in kwargs.items():
-                    if f"{{{key}}}" in content:
-                        content = content.replace(f"{{{key}}}", str(value))
-                    elif key == str(e).strip("'"):
-                        missing_keys.append(key)
+                remaining_placeholders = set()
+
+                # Extract all placeholders
+                placeholders = re.findall(r"(?<!\{)\{([^}\s]+)\}(?!\})", content)
+
+                for placeholder in placeholders:
+                    if placeholder in kwargs:
+                        content = content.replace(
+                            f"{{{placeholder}}}", str(kwargs[placeholder])
+                        )
+                    else:
+                        remaining_placeholders.add(placeholder)
+                        if placeholder == str(e).strip("'"):
+                            missing_keys.append(placeholder)
 
                 msg["content"] = content
 
                 if missing_keys:
                     print(
-                        f"Warning: KeyError in message {i}. The following keys were not found in the content: {', '.join(missing_keys)}"
+                        f"Warning: KeyError in message {i}. The following keys were not found in the kwargs: {', '.join(missing_keys)}"
                     )
 
-                # Check for any remaining placeholders
-                import re
-
-                remaining_placeholders = re.findall(r"\{(.+?)\}", content)
                 if remaining_placeholders:
                     print(
                         f"Warning: The following placeholders in message {i} were not replaced: {', '.join(remaining_placeholders)}"
@@ -135,13 +138,12 @@ class PromptFile:
         return cls._instance
 
     def __init__(self, base_path: Optional[str] = None):
-        if self._initialized:
-            return
-        self.base_path = base_path or "./prompts"
-        self.prompt_names = get_prompt_file_names(self.base_path)
-        self.prompts: Dict[str, PromptConfig] = {}
-        self._initialized = True
-        self.init()
+        if not hasattr(self, "_initialized") or not self._initialized:
+            self.base_path = base_path or "./prompts"
+            self.prompt_names = get_prompt_file_names(self.base_path)
+            self.prompts: Dict[str, PromptConfig] = {}
+            self._initialized = True
+            self.init()
 
     def init(self):
         for prompt_name in self.prompt_names:
