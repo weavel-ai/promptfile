@@ -66,39 +66,25 @@ class PromptConfig(BaseModel):
         new = self.deepcopy()
         for i, msg in enumerate(new.messages):
             content = msg["content"]
-            try:
-                msg["content"] = content.format(**kwargs)
-            except KeyError as e:
-                missing_keys = []
-                remaining_placeholders = set()
+            remaining_placeholders = set()
 
-                # Extract all placeholders
-                placeholders = re.findall(r"(?<!\{)\{([^}\s]+)\}(?!\})", content)
+            # Extract all placeholders
+            placeholders = re.findall(r"(?<!\{)\{([^}\s]+)\}(?!\})", content)
 
-                for placeholder in placeholders:
-                    if placeholder in kwargs:
-                        content = content.replace(
-                            f"{{{placeholder}}}", str(kwargs[placeholder])
-                        )
-                    else:
-                        remaining_placeholders.add(placeholder)
-                        if placeholder == str(e).strip("'"):
-                            missing_keys.append(placeholder)
-
-                msg["content"] = content
-
-                if missing_keys:
-                    print(
-                        f"Warning: KeyError in message {i}. The following keys were not found in the kwargs: {', '.join(missing_keys)}"
+            for placeholder in placeholders:
+                if placeholder in kwargs:
+                    content = content.replace(
+                        f"{{{placeholder}}}", str(kwargs[placeholder])
                     )
+                else:
+                    remaining_placeholders.add(placeholder)
 
-                if remaining_placeholders:
-                    print(
-                        f"Warning: The following placeholders in message {i} were not replaced: {', '.join(remaining_placeholders)}"
-                    )
+            msg["content"] = content
 
-            except ValueError as e:
-                print(f"Error in message {i}: Invalid format string. {str(e)}")
+            if remaining_placeholders:
+                print(
+                    f"Warning: The following placeholders in message {i} were not replaced: {', '.join(remaining_placeholders)}"
+                )
 
         return new
 
@@ -126,6 +112,27 @@ class PromptConfig(BaseModel):
 
 
 class PromptFile:
+    """
+    A singleton class for managing and accessing prompt configurations.
+
+    This class provides functionality to load, store, and retrieve prompt configurations
+    from a specified directory. It ensures that only one instance of the class exists
+    throughout the application.
+
+    Attributes:
+        base_path (str): The base directory path where prompt files are stored.
+        prompt_names (List[str]): A list of available prompt names (without file extensions).
+        prompts (Dict[str, PromptConfig]): A dictionary mapping prompt names to their configurations.
+
+    Methods:
+        init(): Initializes the PromptFile instance by loading all prompt configurations.
+        get(name: str): Retrieves a specific PromptConfig by name.
+
+    Usage:
+        pf = PromptFile()  # Creates or returns the existing instance
+        prompt_config = pf.get("prompt_name")  # Retrieves a specific prompt configuration
+    """
+
     _instance = None
     _lock = Lock()
 
