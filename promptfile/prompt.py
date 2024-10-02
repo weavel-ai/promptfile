@@ -104,9 +104,10 @@ class Prompt(BaseModel):
             msg["content"] = content
 
             if remaining_placeholders:
-                print(
-                    f"Warning: The following placeholders in message {i} were not replaced: {', '.join(remaining_placeholders)}"
-                )
+                pass
+                # print(
+                #     f"The following placeholders in message {i} were not replaced: {', '.join(remaining_placeholders)}"
+                # )
 
         return new
 
