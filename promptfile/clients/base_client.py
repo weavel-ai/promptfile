@@ -20,7 +20,7 @@ class BaseClient:
             file_path = os.path.join(self.base_path, f"{prompt_name}.prompt")
             content = _read_file(file_path)
             self.prompts[prompt_name] = self.prompt_class.load(content)
-            self.prompts[prompt_name].name = prompt_name
+            self.prompts[prompt_name].metadata["name"] = prompt_name
 
     def get(self, name: str) -> Prompt:
         if name in self.prompt_names:
