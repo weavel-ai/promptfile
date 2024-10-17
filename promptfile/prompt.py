@@ -63,7 +63,7 @@ class Prompt(BaseModel):
         return instance
 
     @classmethod
-    def json_load(cls, content: str) -> "Prompt":
+    def load_json(cls, content: str) -> "Prompt":
         """
         Loads a Prompt object from a JSON string.
 
@@ -167,19 +167,6 @@ class Prompt(BaseModel):
         full_content = f"---\n{yaml_header}---\n{messages_content}\n"
 
         return full_content
-
-    def json_dump(self) -> str:
-        """
-        Dumps the prompt to a JSON string.
-
-        Returns:
-            str: A JSON string representation of the prompt.
-        """
-        data = {
-            "metadata": {"model": self.model, **self.metadata},
-            "messages": self.messages
-        }
-        return json.dumps(data, indent=2)
     
     def deepcopy(self) -> "Prompt":
         """
