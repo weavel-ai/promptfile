@@ -1,5 +1,6 @@
 import copy
 import re
+import json
 from typing import Any, Dict, List, Optional
 import yaml
 from pydantic import Field, BaseModel
@@ -61,6 +62,38 @@ class Prompt(BaseModel):
         )
         return instance
 
+    @classmethod
+    def load_json(cls, content: str) -> "Prompt":
+        """
+        Loads a Prompt object from a JSON string.
+
+        Args:
+            content (str): The JSON string containing prompt data.
+
+        Returns:
+            Prompt: A new Prompt object.
+
+        Raises:
+            ValueError: If the JSON format is invalid.
+        """
+        try:
+            data = json.loads(content)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON format: {e}")
+
+        messages = data.get("messages", [])
+        if len(messages) == 0:
+            raise ValueError("messages is empty")
+        metadata = data.get("metadata", {})
+
+        # Create the instance using Pydantic's model_construct
+        instance = cls.model_construct(
+            model=metadata.pop("model", None),
+            messages=messages,
+            metadata=metadata
+        )
+        return instance
+    
     @classmethod
     def load_file(cls, file_path: str) -> "Prompt":
         """
@@ -134,7 +167,7 @@ class Prompt(BaseModel):
         full_content = f"---\n{yaml_header}---\n{messages_content}\n"
 
         return full_content
-
+    
     def deepcopy(self) -> "Prompt":
         """
         Creates a deep copy of the Prompt object.
@@ -143,3 +176,5 @@ class Prompt(BaseModel):
             Prompt: A new Prompt object that is a deep copy of the original.
         """
         return copy.deepcopy(self)
+
+
